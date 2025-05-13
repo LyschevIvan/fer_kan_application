@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Анализ эмоций</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #3f51b5;
+            --primary-light: #e8eaf6;
+            --accent-color: #ff4081;
+            --text-color: #333;
+            --bg-color: #f9f9f9;
+            --card-bg: #fff;
+            --border-color: #e0e0e0;
+        }
+        
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        h1 {
+            color: var(--primary-color);
+            margin-bottom: 10px;
+        }
+        
+        .description {
+            color: #666;
+            margin-bottom: 20px;
+        }
+        
+        .card {
+            background: var(--card-bg);
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            margin-bottom: 20px;
+        }
+        
+        .file-upload {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            border: 2px dashed var(--border-color);
+            border-radius: 8px;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .file-upload:hover {
+            border-color: var(--primary-color);
+        }
+        
+        .file-upload input {
+            display: none;
+        }
+        
+        .upload-icon {
+            font-size: 48px;
+            color: var(--primary-color);
+            margin-bottom: 10px;
+        }
+        
+        .file-label {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        .file-label:hover {
+            background-color: #303f9f;
+        }
+        
+        .file-name {
+            margin-top: 10px;
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .model-options {
+            margin: 20px 0;
+        }
+        
+        .checkbox-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 10px;
+        }
+        
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .checkbox-item input[type="checkbox"] {
+            margin-right: 10px;
+            cursor: pointer;
+        }
+        
+        .checkbox-item label {
+            cursor: pointer;
+        }
+        
+        .submit-btn {
+            display: block;
+            width: 100%;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 12px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin-top: 20px;
+        }
+        
+        .submit-btn:hover {
+            background-color: #303f9f;
+        }
+        
+        .submit-btn:disabled {
+            background-color: #9e9e9e;
+            cursor: not-allowed;
+        }
+        
+        .flash-messages {
+            margin-bottom: 20px;
+        }
+        
+        .flash-message {
+            padding: 10px 15px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+        
+        .flash-message.error {
+            background-color: #ffebee;
+            color: #c62828;
+            border: 1px solid #ffcdd2;
+        }
+        
+        .flash-message.success {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+            border: 1px solid #c8e6c9;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Анализ эмоций на лице</h1>
+            <p class="description">Загрузите фотографию для анализа эмоций с помощью различных моделей</p>
+        </header>
+        
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="flash-messages">
+            {% for category, message in messages %}
+            <div class="flash-message {{ category }}">{{ message }}</div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+        
+        <div class="card">
+            <form method="POST" enctype="multipart/form-data" id="upload-form">
+                <div class="file-upload" id="drop-area">
+                    <div class="upload-icon">📷</div>
+                    <p>Перетащите изображение сюда или</p>
+                    <label for="file" class="file-label">Выберите файл</label>
+                    <input type="file" id="file" name="file" accept="image/*" required>
+                    <div class="file-name" id="file-name"></div>
+                </div>
+                
+                <div class="model-options">
+                    <h3>Выберите модели для анализа:</h3>
+                    <div class="checkbox-group">
+                        {% for model in models %}
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="{{ model }}" name="models" value="{{ model }}" checked>
+                            <label for="{{ model }}">{{ model }}</label>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <button type="submit" class="submit-btn" id="submit-btn" disabled>Анализировать</button>
+            </form>
+        </div>
+    </div>
+    
+    <script>
+        const fileInput = document.getElementById('file');
+        const fileName = document.getElementById('file-name');
+        const submitBtn = document.getElementById('submit-btn');
+        const dropArea = document.getElementById('drop-area');
+        const form = document.getElementById('upload-form');
+        
+        // Проверка выбранных моделей
+        function checkSelectedModels() {
+            const checkboxes = document.querySelectorAll('input[name="models"]:checked');
+            return checkboxes.length > 0;
+        }
+        
+        // Проверка валидности формы
+        function validateForm() {
+            if (fileInput.files.length > 0 && checkSelectedModels()) {
+                submitBtn.disabled = false;
+            } else {
+                submitBtn.disabled = true;
+            }
+        }
+        
+        // Вызовем валидацию сразу после загрузки страницы
+        document.addEventListener('DOMContentLoaded', function() {
+            validateForm();
+        });
+        
+        // Обработчик выбора файла
+        fileInput.addEventListener('change', function() {
+            if (this.files.length > 0) {
+                fileName.textContent = this.files[0].name;
+                validateForm();
+            } else {
+                fileName.textContent = '';
+                validateForm();
+            }
+        });
+        
+        // Обработчик выбора моделей
+        document.querySelectorAll('input[name="models"]').forEach(checkbox => {
+            checkbox.addEventListener('change', validateForm);
+        });
+        
+        // Drag and drop функциональность
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropArea.addEventListener(eventName, preventDefaults, false);
+        });
+        
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropArea.addEventListener(eventName, highlight, false);
+        });
+        
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropArea.addEventListener(eventName, unhighlight, false);
+        });
+        
+        function highlight() {
+            dropArea.style.borderColor = getComputedStyle(document.documentElement).getPropertyValue('--primary-color');
+            dropArea.style.backgroundColor = getComputedStyle(document.documentElement).getPropertyValue('--primary-light');
+        }
+        
+        function unhighlight() {
+            dropArea.style.borderColor = getComputedStyle(document.documentElement).getPropertyValue('--border-color');
+            dropArea.style.backgroundColor = 'transparent';
+        }
+        
+        dropArea.addEventListener('drop', handleDrop, false);
+        
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            
+            if (files.length > 0) {
+                fileInput.files = files;
+                fileName.textContent = files[0].name;
+                validateForm();
+            }
+        }
+        
+        // Предотвращение отправки формы при нажатии Enter
+        form.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+            }
+        });
+    </script>
+</body>
+</html> 
